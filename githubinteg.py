@@ -6,9 +6,6 @@ def main(request):
 def getCentrality(jsonStr):
 
     g = _createGraphElements(json.loads(jsonStr))
-    #print(g)
-    #layout = g.layout("kk")
-    #igraph.plot(g, layout=layout)
     dc = OrderedDict({"ids": g.vs["ids"], "label": g.vs["label"]})
     digits = 2
     numOfNodes = g.vcount()
@@ -47,7 +44,6 @@ def _createGraphElements(jdata):
     g.add_edges(connections)
     return g
 
-
 def _normaliseDegree(targetArray, numOfNodes):
     if numOfNodes == 0:
         return 0
@@ -70,4 +66,3 @@ def _roundNumbers(targetArray, digits):
 
 def _roundNumber(target, digits):
     return round(target, digits)
-
