@@ -1,8 +1,30 @@
 
 def main(request):
-    jsonStr = ""
+    jsonStr = getTestData()
     getCentrality(jsonStr)
 
+
+def getTestData():
+	ret = {
+    "nodes":[
+        {"node":0,"name":"node0"},
+        {"node":1,"name":"node1"},
+        {"node":2,"name":"node2"},
+        {"node":3,"name":"node3"},
+        {"node":4,"name":"node4"},
+        {"node":5,"name":"node5"},
+        {"node":6,"name":"node6"}
+    ],
+    "links":[
+        {"source":0,"target":1,"value":4},
+        {"source":1,"target":2,"value":5},
+        {"source":2,"target":3,"value":10},
+        {"source":3,"target":4,"value":12},
+        {"source":4,"target":5,"value":14},
+        {"source":5,"target":6,"value":18}
+    ]
+	}
+	return ret
 
 def getCentrality(jsonStr):
 
