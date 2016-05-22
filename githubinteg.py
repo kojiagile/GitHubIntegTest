@@ -3,28 +3,6 @@ def main(request):
     _roundNumber(4.12345, 2)
 
 
-def getNeighbours(jsonStr):
-    data = json.loads(jsonStr)
-    nodes = data["nodes"]
-    edges = data["edges"]
-    allNeighbours = {"nodes": []}
-    
-    for node in nodes:
-        neighbours = {"id": node["id"], "neighbours": []}
-        for edge in edges:
-            #insert directly connected node's ID
-            if edge["from"] == node["id"]:
-                neighbours["neighbours"].append(edge["to"])
-            elif edge["to"] == node["id"]:
-                neighbours["neighbours"].append(edge["from"])
-        # remove duplicated id from the array before adding it to allNeighbours object
-        neighbours["neighbours"] = list(set(neighbours["neighbours"]))
-        allNeighbours["nodes"].append(neighbours)
-
-    allNeighbours = json.dumps(allNeighbours)
-    return allNeighbours
-
-
 def _createGraphElements(jdata):
     ids = []
     labels = []
