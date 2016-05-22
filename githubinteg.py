@@ -3,6 +3,28 @@ def main(request):
     _roundNumber(4.12345, 2)
 
 
+def getCentrality(jsonStr):
+
+    g = _createGraphElements(json.loads(jsonStr))
+    #print(g)
+    #layout = g.layout("kk")
+    #igraph.plot(g, layout=layout)
+    dc = OrderedDict({"ids": g.vs["ids"], "label": g.vs["label"]})
+    digits = 2
+    numOfNodes = g.vcount()
+    dc["inDegree"] = _roundNumbers(_normaliseDegree(g.degree(mode="in"), numOfNodes), digits)
+    dc["outDegree"] = _roundNumbers(_normaliseDegree(g.degree(mode="out"), numOfNodes), digits)
+    dc["totalDegree"] = _roundNumbers(_normaliseDegree(g.degree(), numOfNodes), digits)
+    dc["betweenness"] = _roundNumbers(g.betweenness(directed=True), digits)
+    dc["inCloseness"] = _roundNumbers(g.closeness(mode="in"), digits)
+    dc["outCloseness"] = _roundNumbers(g.closeness(mode="out"), digits)
+    dc["totalCloseness"] = _roundNumbers(g.closeness(), digits)
+    dc["eigenvector"] = _roundNumbers(g.eigenvector_centrality(directed=True, scale=True), digits)
+    dc["density"] = _roundNumber(g.density(loops=True), digits)
+
+    return json.dumps(dc)
+
+
 def _createGraphElements(jdata):
     ids = []
     labels = []
