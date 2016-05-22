@@ -9,6 +9,7 @@ def _normaliseDegree(targetArray, numOfNodes):
         return 0
 
     index = 0
+    #To normalize the degree, degree is divided by n-1, where n is the number of vertices in the graph.
     for num in targetArray:
         targetArray[index] = float(num) / (numOfNodes - 1)
         index = index + 1
