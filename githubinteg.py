@@ -103,3 +103,110 @@ def _roundNumbers(targetArray, digits):
 
 def _roundNumber(target, digits):
     return round(target, digits)
+
+
+def getCCAData(user, course_code, platform):
+
+    result = { "nodes":[], "links":[], "info":[] }
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT lrc.xapi->'context'->'contextActivities'->'other'->0->'definition'->'name'->>'en-US' as otherObjType,
+        lrc.xapi->'context'->'contextActivities'->'parent'->0->>'id' as repourl
+        FROM clatoolkit_learningrecord as lrc
+        where lrc.username = '%s' and lrc.platform = '%s' and lrc.course_code = '%s'
+    """ % (user.username, platform, course_code))
+
+    records = cursor.fetchall()
+
+    if len(records) == 0:
+        return result
+
+    repourl = ""
+    for row in records:
+        #print row[0]
+        if row[0] == 'commit':
+            repourl = row[1]
+            break
+
+    if repourl == "":
+        return result
+
+    cursor.execute("""
+        SELECT  distinct 
+            lrc.xapi->'context'->'contextActivities'->'other'->0->>'id' as commiturl
+        FROM clatoolkit_learningrecord as lrc
+        where lrc.xapi->'context'->'contextActivities'->'other'->0->'definition'->'name'->>'en-US'='commit'
+        and lrc.xapi->'context'->'contextActivities'->'parent'->0->>'id'='%s'
+        """ % (repourl))
+
+    records = cursor.fetchall()
+    if len(records) == 0:
+        return result
+
+    commitUrlList = []
+    for row in records:
+        commitUrlList.append(row[0])
+
+    index = 0
+    totalLines = 0
+    commitTotal = 0
+    filepaths = []
+    diffs = []
+    verbs = []
+    for commitUrl in commitUrlList:
+        #print ("commit url = " + commitUrl)
+
+        cursor.execute("""
+            SELECT  lrc.xapi->'actor'->>'name' as cla_account,
+                lrc.xapi->'actor'->'account'->>'name' as github_account,
+                lrc.xapi->'verb'->'display'->>'en-US',
+                lrc.xapi->'object'->'definition'->'name'->>'en-US' as diffs,
+                lrc.xapi->'object'->>'id' as filepath,
+                lrc.xapi->>'timestamp' as timestamp,
+                lrc.xapi->'context'->'contextActivities'->'other'->0->>'id' as repourl,
+                lrc.xapi->'context'->'contextActivities'->'parent'->0->>'id' as commiturl,
+                lrc.numofcontentadd,
+                lrc.numofcontentdel
+            FROM clatoolkit_learningrecord as lrc
+            where lrc.xapi->'context'->'contextActivities'->'other'->0->>'id'='%s'
+            and lrc.xapi->'context'->'contextActivities'->'parent'->0->>'id'='%s'
+            and lrc.xapi->'verb'->'display'->>'en-US' in ('%s', '%s', '%s')
+            order by timestamp asc
+            """ % (repourl, commitUrl, "added", "updated", "removed"))
+
+        records = cursor.fetchall()
+        if len(records) == 0:
+            print "This commit has no files."
+            #index -= 1
+            continue
+
+        row = None
+        #for row in records:
+        for row in records: 
+            #row = records[i]
+            verbs.append(row[2])
+            diffs.append(row[3])
+            filepaths.append(row[4])
+            commitTotal += row[8] - row[9]
+
+        node = {"node": index, "name": row[1]}
+        info = {"node": index, "cla_name": row[0], "name": row[1], "verb": verbs, "diffs": diffs,
+        "filepaths": filepaths, "timestamp": row[5], "repourl": row[6], "commiturl": row[7], "commitlines": commitTotal}
+        result["nodes"].append(node)
+        result["info"].append(info)
+        filepaths = []
+        diffs = []
+        verbs = []
+        #totalLines += row[8] - row[9]
+        #prevCommitUrl = row[7]
+        print "commit total = " + str(commitTotal)
+        if index < len(commitUrlList) - 1:
+            totalLines += commitTotal
+            print "totalLines = " + str(totalLines)
+            link = {"source": index, "target": index + 1,"value":totalLines}
+            result["links"].append(link)
+            index += 1
+            commitTotal = 0
+
+    return result
+    
