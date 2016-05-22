@@ -1,6 +1,7 @@
 
 def main(request):
-    _roundNumber(4.12345, 2)
+    jsonStr = ""
+    getCentrality(jsonStr)
 
 
 def getCentrality(jsonStr):
